@@ -3,27 +3,45 @@ import pandas as pd
 
 def calculate_demographic_data(print_data=True):
     # Read data from file
-    df = None
+    df = pd.read_csv("adult.data.csv")
 
     # How many of each race are represented in this dataset? This should be a Pandas series with race names as the index labels.
-    race_count = None
+    race_count = df[["race"]]
+    race_count["race_count"] = 1
+    race_count = race_count.groupby(["race"]).sum()
+    race_count = race_count.sort_index()
 
     # What is the average age of men?
-    average_age_men = None
+    average_age_men = df[["sex", "age"]]
+    average_age_men = average_age_men.groupby(["sex"]).mean()
+    average_age_men = average_age_men.rename({"age": "average_age_men"})
+    average_age_men = average_age_men.sort_index()
 
     # What is the percentage of people who have a Bachelor's degree?
-    percentage_bachelors = None
+    percentage_bachelors = df[["education"]]
+    percentage_bachelors["percentage_bachelors"] = 1.
+    percentage_bachelors = percentage_bachelors.groupby(["education"]).sum()
+    percentage_bachelors = percentage_bachelors/(percentage_bachelors["percentage_bachelors"]).sum()
+    percentage_bachelors = percentage_bachelors.sort_index()
 
     # What percentage of people with advanced education (`Bachelors`, `Masters`, or `Doctorate`) make more than 50K?
     # What percentage of people without advanced education make more than 50K?
 
     # with and without `Bachelors`, `Masters`, or `Doctorate`
-    higher_education = None
-    lower_education = None
-
+    higher_education = df[["education", "salary"]]
+    higher_education["is_advanced"] = (higher_education[["education"]]).apply(lambda x: (x[1]).count('Bachelors'))+(higher_education[["education"]]).apply(lambda x: (x[1]).count('Masters'))+(higher_education[["education"]]).apply(lambda x: (x[1]).count('Doctorate'))
+    higher_education = higher_education[higher_education["is_advanced"]>0]
+    higher_education["count"] = 1.
+    higher_education = ((higher_education[(higher_education[["salary"]]).apply(lambda x: (x[0], (x[1]).count('>50K')))])["count"]).sum()/(higher_education["count"]).sum()
+    lower_education = df[["education", "salary"]]
+    lower_education["is_advanced"] = (lower_education[["education"]]).apply(lambda x: (x[1]).count('Bachelors'))+(lower_education[["education"]]).apply(lambda x: (x[1]).count('Masters'))+(lower_education[["education"]]).apply(lambda x: (x[1]).count('Doctorate'))
+    lower_education = lower_education[lower_education["is_advanced"]==0]
+    lower_education["count"] = 1.
+    lower_education = ((lower_education[(lower_education[["salary"]]).apply(lambda x: (x[0], (x[1]).count('>50K')))])["count"]).sum()/(lower_education["count"]).sum()
+    
     # percentage with salary >50K
-    higher_education_rich = None
-    lower_education_rich = None
+    higher_education_rich = higher_education
+    lower_education_rich = lower_education
 
     # What is the minimum number of hours a person works per week (hours-per-week feature)?
     min_work_hours = None
